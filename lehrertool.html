@@ -53,7 +53,7 @@ code{background:#f1f4f2;border:1px solid #e1e7e3;border-radius:5px;padding:0 5px
 .kedit{display:flex;flex-direction:column;gap:8px}.kedit label{display:flex;align-items:center;gap:8px}.kedit input{width:80px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 20px;border-radius:24px;font-weight:600;z-index:120;display:none;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 </style></head><body>
-<header><div class="in"><div class="ic">✓</div><div><h1>Excel-Proben korrigieren</h1><p>Informatik · Klasse 9 · Lehrertool – Abgaben hineinziehen, die Korrektur passiert automatisch.</p></div></div></header>
+<header><div class="in"><div class="ic">✓</div><div><h1>Excel-Proben korrigieren</h1><p>Informatik · Klasse 9 · Lehrertool – Abgaben hineinziehen, die Korrektur passiert automatisch.</p></div><a href="#" onclick="lockOut();location.reload();return false;" style="margin-left:auto;color:#fff;opacity:.85;font-size:13px;text-decoration:underline">🔒 Abmelden</a></div></header>
 <div class="wrap"><div id="key"></div><main id="main"></main></div><div id="toast"></div>
 <script>
 'use strict';
@@ -983,5 +983,34 @@ function modal(title,html,btns,cls){const old=document.getElementById('mask');if
 let tt;function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',2200);}
 document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{if(!e.target.closest('#drop')){e.preventDefault();if(e.dataTransfer.files.length)readFiles([...e.dataTransfer.files]);}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=document.getElementById('mask');if(m)m.remove();}});
-keyUI();render();
+
+/* ===== Lehrer-Code (einfache Sperre, kein echter Schutz) ===== */
+const LOCK_HASH='313e12d2';
+function lockHash(s){let h=2166136261>>>0;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)>>>0;}return h.toString(16);}
+function lockOpen(){try{return sessionStorage.getItem('inf9_lehrer')==='1'||localStorage.getItem('inf9_lehrer')==='1';}catch(e){return false;}}
+function lockAsk(onOk,onCancel){
+  if(lockOpen()){onOk();return;}
+  if(!document.getElementById('lockcss')){const st=document.createElement('style');st.id='lockcss';st.textContent=`
+  .lk-mask{position:fixed;inset:0;background:rgba(10,30,20,.55);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+  .lk-box{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;color:#132019}
+  .lk-ic{width:60px;height:60px;border-radius:18px;background:#e7f6ec;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px}
+  .lk-box h2{margin:0 0 4px;font-size:20px}.lk-box p{margin:0 0 16px;color:#5f6f67;font-size:14px}
+  .lk-box input[type=password]{width:100%;font:inherit;font-size:18px;text-align:center;letter-spacing:.15em;padding:12px;border:1.5px solid #d6dfda;border-radius:12px;outline:none}
+  .lk-box input[type=password]:focus{border-color:#15803d;box-shadow:0 0 0 4px #15803d22}
+  .lk-box input.bad{border-color:#dc2626;animation:lkshake .3s}
+  @keyframes lkshake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .lk-rem{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 0 4px;font-size:13px;color:#5f6f67}
+  .lk-btns{display:flex;gap:8px;margin-top:14px}.lk-btns button{flex:1;font:inherit;font-weight:700;padding:11px;border-radius:12px;cursor:pointer;border:1px solid #d6dfda;background:#fff}
+  .lk-btns .ok{background:#15803d;color:#fff;border-color:#15803d}.lk-err{color:#dc2626;font-size:13px;min-height:18px;margin-top:6px}`;document.head.appendChild(st);}
+  const m=document.createElement('div');m.className='lk-mask';
+  m.innerHTML=`<div class="lk-box"><div class="lk-ic">🔒</div><h2>Lehrerbereich</h2><p>Bitte gib den Code ein.</p><input type="password" id="lk-in" autocomplete="off" placeholder="••••••"><div class="lk-err" id="lk-err"></div><label class="lk-rem"><input type="checkbox" id="lk-rem"> Auf diesem Gerät merken</label><div class="lk-btns">${onCancel?'<button id="lk-no">Abbrechen</button>':''}<button class="ok" id="lk-ok">Öffnen</button></div></div>`;
+  document.body.appendChild(m);const inp=m.querySelector('#lk-in');setTimeout(()=>inp.focus(),50);
+  const tryIt=()=>{if(lockHash(inp.value)===LOCK_HASH){try{sessionStorage.setItem('inf9_lehrer','1');if(m.querySelector('#lk-rem').checked)localStorage.setItem('inf9_lehrer','1');}catch(e){}m.remove();onOk();}
+    else{inp.classList.remove('bad');void inp.offsetWidth;inp.classList.add('bad');m.querySelector('#lk-err').textContent='Falscher Code';inp.select();}};
+  m.querySelector('#lk-ok').onclick=tryIt;inp.addEventListener('keydown',e=>{if(e.key==='Enter')tryIt();if(e.key==='Escape'&&onCancel){m.remove();onCancel();}});
+  const no=m.querySelector('#lk-no');if(no)no.onclick=()=>{m.remove();onCancel();};
+}
+function lockOut(){try{sessionStorage.removeItem('inf9_lehrer');localStorage.removeItem('inf9_lehrer');}catch(e){}}
+
+lockAsk(()=>{keyUI();render();});
 </script></body></html>

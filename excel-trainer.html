@@ -957,13 +957,13 @@ function renderHome(){
   APP.view='home';APP.wb=null;hidePopups();
   const done=MODULES.reduce((s,m)=>s+modDone(m),0),total=MODULES.reduce((s,m)=>s+m.tasks.length,0);
   const last=store.get('lastResult',null);
-  let h=`<div class="home"><div class="hwrap"><div class="hhead"><div class="logo">${XLLOGO}</div><div><a href="index.html" style="color:#fff;opacity:.85;font-size:13px;text-decoration:none">← Informatik · Klasse 9</a><h1>Excel-Trainer 9</h1><p>Übe die wichtigsten Excel-Funktionen Schritt für Schritt – von leicht bis schwer.</p></div></div>
+  let h=`<div class="home"><div class="hwrap"><div class="hhead"><div class="logo">${XLLOGO}</div><div><a href="index.html" style="color:#fff;opacity:.85;font-size:13px;text-decoration:none">← Informatik · Klasse 9</a><h1>Excel-Trainer 9</h1><p>5 Module · von leicht bis schwer</p></div></div>
   <div class="namecard"><b style="font-size:15px">Dein Vorname:</b><input id="nm" value="${esc(NAME)}" placeholder="z. B. Lena" maxlength="30"><span style="color:#666">Fortschritt: <b>${done}</b> von ${total} Aufgaben gelöst</span></div><div class="mods">`;
   MODULES.forEach((m,i)=>{const d=modDone(m),n=m.tasks.length,ul=modUnlocked(i);
     h+=`<div class="mod ${ul?'':'lock'}"><div class="num">Modul ${m.nr}${d===n?' · ✓ geschafft':''}</div><h3>${m.title}</h3><div class="desc">${m.desc}</div><div class="bar"><i style="width:${d/n*100}%"></i></div><div style="font-size:12px;color:#666">${d} von ${n} Aufgaben</div>
     ${ul?`<button class="btn sm" style="background:#6d3fc0" data-qt="${m.id}">⚡ Schnelltest${(store.get('qtres2',{})[m.id]?' · '+('⭐'.repeat(store.get('qtres2',{})[m.id].stars)||'0 ⭐'):'')}</button>`:''}<button class="btn ${d===n?'sec':''}" data-mod="${i}" ${ul?'':'disabled'}>${ul?(d===0?'Starten':d===n?'Wiederholen':'Weitermachen'):'🔒 Erst Modul '+(i)+' abschließen'}</button></div>`;});
   const tu=testUnlocked();
-  h+=`<div class="mod test ${tu?'':'lock'}"><div class="num">Zum Schluss</div><h3>🎓 Abschlusstest</h3><div class="desc">Eine Excel-Datei zur Klassenfahrt mit ${TEST_ITEMS.length} Aufgaben aus allen Modulen – ohne Tipps. Du bekommst Punkte, eine (fiktive) Note und ein persönliches Feedback.</div>
+  h+=`<div class="mod test ${tu?'':'lock'}"><div class="num">Zum Schluss</div><h3>🎓 Abschlusstest</h3><div class="desc">Alle Themen · ${TEST_ITEMS.length} Aufgaben · mit Note</div>
   ${last?`<div style="font-size:12px;color:#666">Letztes Ergebnis: ${last.pts}/${last.max} Punkte · Note ${last.note}</div>`:''}
   <button class="btn" style="background:#c55a11" id="starttest" ${tu?'':'disabled'}>${tu?'Test starten':'🔒 Erst alle Module abschließen'}</button>${last?'<button class="btn sec" id="showres">Letztes Ergebnis ansehen</button>':''}</div></div>
   <div class="hfoot"><label><input type="checkbox" id="unl" ${UNLOCK?'checked':''}> Lehrkraft-Modus: alle Module und den Test freischalten</label><a id="reset">Gesamten Fortschritt zurücksetzen</a></div></div></div>`;
@@ -1588,6 +1588,113 @@ function showModal(title,html,btns,cls){
 }
 function closeModal(){const m=$('#mask');if(m)m.remove();APP.modal=false;}
 let toastT=null;function toast(t){const el=$('#toast');el.textContent=t;el.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>el.style.display='none',1800);}
+
+
+/* =====================================================================
+   TRAINER – AUFGERÄUMTE ANSICHT („auf einen Blick“)
+   ===================================================================== */
+(function(){const st=document.createElement('style');st.textContent=`
+.tb{background:#fff;color:#1d2a24;border-bottom:1px solid #e3e7e5;height:44px}
+.tb .back{background:#f1f4f2;color:#1d2a24}.tb .back:hover{background:#e4eae6}.tb .ttl{font-weight:600}
+.ribbon{background:#fff;border-top:0;border-bottom:1px solid #eceff0}
+.fbar{border-bottom:1px solid #eceff0}
+.status{display:none}.sheettabs .plus,.sheettabs .nav{display:none}.sheettabs{background:#fff;border-top:1px solid #eceff0}
+table.g td.tgt{box-shadow:inset 0 0 0 2px #f0a000;background:#fff8e6}
+.pane{width:380px;background:#fff;border-left:1px solid #e3e7e5}
+.tp{display:flex;flex-direction:column;height:100%}
+.tp .top{padding:14px 18px 12px;border-bottom:1px solid #eef1f0}
+.tp .mtitle{font-size:12.5px;color:#7a8780;font-weight:600}
+.tp .prog{display:flex;gap:5px;margin-top:8px}
+.tp .prog button{flex:1;height:28px;border-radius:8px;border:1px solid #dfe4e1;background:#fff;font-weight:700;font-size:12.5px;color:#5d6b64;cursor:pointer;padding:0;font-family:inherit}
+.tp .prog button.cur{border:2px solid #217346;color:#217346}.tp .prog button.dn{background:#e6f3eb;border-color:#b9dcc6;color:#217346}
+.tp .tools{display:flex;gap:6px;margin-top:10px}
+.tp .tools button{flex:1;border-radius:10px;padding:7px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.tp .tools .mb{background:#fff3cd;border:1.5px solid #f0b400;color:#5e4200}.tp .tools .mb:hover{background:#ffe8a3}
+.tp .tools .qt{background:#f1eafd;border:1.5px solid #6d3fc0;color:#4b2591}.tp .tools .qt:hover{background:#e4d6fb}
+.tp .mid{flex:1;overflow:auto;padding:18px}
+.tp .nr{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:#7a8780;font-weight:600}
+.tp .ok{color:#217346}
+.tp .q{font-size:19px;font-weight:700;line-height:1.35;margin:8px 0 12px;color:#1d2a24}
+.tp .cellchip{display:inline-flex;align-items:center;gap:6px;background:#fff8e6;border:1.5px solid #f0a000;color:#7a5200;border-radius:10px;padding:5px 11px;font-weight:700;font-size:14px;cursor:pointer}
+.tp ol.st{list-style:none;padding:0;margin:14px 0 0;counter-reset:s}
+.tp ol.st li{counter-increment:s;position:relative;padding:8px 0 8px 36px;font-size:15px;line-height:1.4;border-bottom:1px solid #f1f3f2}
+.tp ol.st li:last-child{border-bottom:0}
+.tp ol.st li:before{content:counter(s);position:absolute;left:0;top:7px;width:24px;height:24px;border-radius:50%;background:#217346;color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.tp ol.st code,.tp .inf code,.tp .fbx code{background:#eef3ef;border:1px solid #d5e3d9;border-radius:4px;padding:0 5px;font-family:Consolas,monospace;font-size:13.5px;white-space:nowrap}
+.tp kbd{background:#fff;border:1px solid #aaa;border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:12px;font-family:inherit}
+.tp .inf{margin-top:10px;font-size:13.5px;color:#4b5a52;background:#f4f7f5;border-radius:10px;padding:8px 10px}
+.tp .fbx{margin-top:12px}
+.tp .bot{padding:12px 18px;border-top:1px solid #eef1f0;display:flex;gap:8px}
+.tp .bot button{flex:1;padding:11px 8px;border-radius:11px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid #dfe4e1;background:#fff;color:#1d2a24}
+.tp .bot .chk{background:#217346;color:#fff;border-color:#217346}
+.tp .bot .nx{background:#1d2a24;color:#fff;border-color:#1d2a24}
+.tp .rst{display:block;margin-top:18px;background:none;border:0;color:#9aa59f;font-size:12px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit}
+`;document.head.appendChild(st);})();
+MODULES[0].desc='Formeln, + − · ÷ und SUMME';MODULES[1].desc='Reihen und Formeln mit dem ■ ziehen';MODULES[2].desc='Zellen zählen statt addieren';MODULES[3].desc='HEUTE() und mit Daten rechnen';MODULES[4].desc='Wenn … dann … sonst';
+Object.assign(TT,{
+ grund:[
+  {g:'Taschengeld gesamt',c:'B6',s:['In <b>B6</b> <code>=</code> tippen','<b>B3</b> <code>+</code> <b>B4</b> <code>+</code> <b>B5</b> anklicken','<kbd>Enter ↵</kbd>']},
+  {g:'B5 auf 30 ändern',c:'B5',s:['In <b>B5</b> <code>30</code> tippen, <kbd>Enter ↵</kbd>','B6 beobachten 👀']},
+  {g:'Urlaubskosten mit SUMME',c:'B8',s:['<code>=SU</code> tippen, <kbd>Tab ⇥</kbd>','<b>B4 bis B7</b> markieren','<kbd>Enter ↵</kbd>']},
+  {g:'Was bleibt übrig?',c:'B11',s:['<code>=</code> <b>B10</b> <code>-</code> <b>B8</b>','<kbd>Enter ↵</kbd>'],i:'Erspartes minus Kosten'},
+  {g:'Boot: Preis pro Person',c:'E6',s:['<code>=</code> <b>E4</b> <code>/</code> <b>E5</b>','<kbd>Enter ↵</kbd>'],i:'<code>/</code> = geteilt'},
+  {g:'Boot: 8 Tage pro Person',c:'E8',s:['<code>=</code> <b>E6</b> <code>*</code> <b>E7</b>','<kbd>Enter ↵</kbd>'],i:'<code>*</code> = mal'},
+  {g:'Beträge als Euro',c:'B4',s:['<b>B4 bis B11</b> markieren','Oben auf <b>€</b> klicken']}],
+ auto:[
+  {g:'Wochentage ausfüllen',c:'A3',s:['<b>A3</b> anklicken','Grünes <b>■</b> bis <b>A9</b> ziehen']},
+  {g:'1. bis 10. Platz',c:'B3',s:['<b>B3</b> anklicken','<b>■</b> bis <b>B12</b> ziehen']},
+  {g:'Zahlenfolge bis 0',c:'C3',s:['<b>C3 + C4</b> markieren','<b>■</b> bis <b>C13</b> ziehen'],i:'Zwei Zahlen → Excel erkennt den Schritt'},
+  {g:'Wortfolge wiederholen',c:'D3',s:['<b>D3 bis D5</b> markieren','<b>■</b> bis <b>D11</b> ziehen']},
+  {g:'Gesamtpreis jeder Zeile',c:'D4',s:['In <b>D4</b>: <code>=B4*C4</code>','<b>■</b> bis <b>D8</b> ziehen']}],
+ anzahl:[
+  {g:'Wer hat einen Laptop?',c:'G8',s:['<code>=ANZAHL(</code>','<b>B5 bis B32</b> markieren','<kbd>Enter ↵</kbd>'],i:'ANZAHL zählt Zellen mit Zahlen'},
+  {g:'Wer hat ein Tablet?',c:'G7',s:['Wie eben – Spalte <b>D</b>']},
+  {g:'Wer hat ein Smartphone?',c:'G9',s:['Wie eben – Spalte <b>C</b>']},
+  {g:'Wie viele Personen?',c:'G6',s:['<code>=ANZAHL2(</code>','Namen <b>A5 bis A32</b>','<kbd>Enter ↵</kbd>'],i:'ANZAHL2 zählt auch Text'},
+  {g:'Wer hat kein Smartphone?',c:'G10',s:['<code>=ANZAHLLEEREZELLEN(</code>','<b>C5 bis C32</b>','<kbd>Enter ↵</kbd>']}],
+ datum:[
+  {g:'Heutiges Datum',c:'B4',s:['<code>=HEUTE()</code>','<kbd>Enter ↵</kbd>']},
+  {g:'Dein nächster Geburtstag',c:'B3',s:['Mit Punkten: <code>24.03.2027</code>']},
+  {g:'Tage bis zum Geburtstag',c:'B5',s:['<code>=</code> <b>B3</b> <code>-</code> <b>B4</b>']},
+  {g:'Ferienbeginn eintragen',c:'B8',s:['<code>02.08.2027</code> tippen']},
+  {g:'Datum per Tastatur',c:'B9',s:['<kbd>Strg</kbd> + <kbd>.</kbd> drücken'],i:'So bleibt das Datum fest'},
+  {g:'Tage bis zu den Ferien',c:'B10',s:['<code>=</code> <b>B8</b> <code>-</code> <b>B9</b>']},
+  {g:'Rückgabe in 21 Tagen',c:'B13',s:['<b>B13</b>: <code>=HEUTE()</code>','<b>B14</b>: <code>21</code>','<b>B15</b>: <code>=B13+B14</code>']},
+  {g:'Datum vor 14 Tagen',c:'B18',s:['<code>=HEUTE()-14</code>']}],
+ wenn:[
+  {g:'Ampel: rot → stehen',c:'B6',s:['<code>=WENN(A6="rot";"stehen";"gehen")</code>','<b>■</b> bis <b>B7</b> ziehen'],i:'Wörter in "Anführungszeichen"'},
+  {g:'Über 3 € → nicht kaufen',c:'J6',s:['Bedingung: <code>I6&gt;3</code>','dann <code>"nicht kaufen"</code>, sonst <code>"kaufen"</code>','<b>■</b> bis <b>J9</b> ziehen']},
+  {g:'Note über 3 → ausfragen',c:'J13',s:['Bedingung: <code>I13&gt;3</code>','<b>■</b> bis <b>J16</b> ziehen']},
+  {g:'Note 4 oder schlechter → ausfragen',c:'J21',s:['Bedingung: <code>I21&gt;=4</code>','<b>■</b> bis <b>J24</b> ziehen'],i:'<code>&gt;=</code> = größer oder gleich'},
+  {g:'Über 35 Mitglieder → 12 € je Mitglied',c:'C4',s:['Bedingung: <code>B4&gt;35</code>','dann <code>B4*$G$4</code>, sonst <code>0</code>','<b>■</b> bis <b>C10</b> ziehen'],i:'<code>$</code> hält G4 fest'}]
+});
+function renderPane(){
+  const pane=$('#pane');if(!pane)return;
+  if(APP.quick){renderQuickPane(pane);return;}
+  if(APP.test){renderTestPane(pane);return;}
+  const m=APP.mod,t=curTask(),p=tprog(m.id,APP.taskIdx),n=m.tasks.length,x=(TT[m.id]||[])[APP.taskIdx]||{g:t.title,c:t.cells[0],s:[]};
+  const hints=t.hints||[];const best=store.get('qtres2',{})[m.id];
+  let hh='';for(let i=0;i<APP.hintLvl&&i<hints.length;i++)hh+=`<div class="fbx tip"><b class="h">💡 Tipp ${i+1}</b>${hints[i]}</div>`;
+  if(APP.showSol)hh+=`<div class="fbx sol"><b class="h">🔑 Lösung</b>${t.solution}</div>`;
+  const hl=APP.hintLvl<hints.length?(APP.hintLvl===0?'💡 Tipp':'💡 Tipp 2'):'🔑 Lösung';
+  const last=APP.taskIdx===n-1;
+  pane.innerHTML=`<div class="tp"><div class="top"><div class="mtitle">Modul ${m.nr} · ${esc(m.title)}</div>
+    <div class="prog">${m.tasks.map((y,i)=>`<button class="${i===APP.taskIdx?'cur ':''}${tprog(m.id,i).done?'dn':''}" data-ti="${i}" title="${esc(y.title)}">${tprog(m.id,i).done?'✓':i+1}</button>`).join('')}</div>
+    <div class="tools"><button class="mb" id="merk2">📄 Merkblatt</button><button class="qt" id="qt2">⚡ Schnelltest${best?' '+('⭐'.repeat(best.stars)||''):''}</button></div></div>
+   <div class="mid"><div class="nr"><span>Aufgabe ${APP.taskIdx+1} von ${n}</span>${p.done?'<span class="ok">✓ gelöst</span>':''}</div>
+    <div class="q">${x.g}</div><span class="cellchip" data-goto="${x.c}">📍 ${x.c}</span>
+    <ol class="st">${x.s.map(z=>'<li>'+z+'</li>').join('')}</ol>${x.i?'<div class="inf">ℹ️ '+x.i+'</div>':''}
+    ${hh}${APP.fb?`<div class="fbx ${APP.fb.cls}">${APP.fb.html}</div>`:''}
+    <button class="rst" id="rst">↺ Arbeitsmappe zurücksetzen</button></div>
+   <div class="bot">${p.done?`<button id="hint">${hl}</button><button class="nx" id="nxt">${last?'Modul fertig 🎉':'Weiter →'}</button>`:`<button class="chk" id="chk">✔ Prüfen</button><button id="hint">${hl}</button><button id="nxt" title="Aufgabe überspringen">${last?'Fertig':'Weiter →'}</button>`}</div></div>`;
+  pane.querySelectorAll('[data-ti]').forEach(d=>d.onclick=()=>{APP.showSol=false;openTask(+d.dataset.ti);});
+  pane.querySelectorAll('[data-goto]').forEach(g=>g.onclick=()=>{commitIfEditing();selectCell(g.dataset.goto);$('#gw').focus({preventScroll:true});});
+  const ck=$('#chk');if(ck)ck.onclick=()=>{commitIfEditing();doCheck(true);};
+  $('#hint').onclick=()=>{if(APP.hintLvl<hints.length){APP.hintLvl++;p.hints++;}else{APP.showSol=true;p.sol=true;}saveProg();renderPane();};
+  $('#nxt').onclick=()=>{APP.showSol=false;if(!last)openTask(APP.taskIdx+1);else moduleDone();};
+  $('#qt2').onclick=()=>{saveWB();openQuick(m.id);};$('#merk2').onclick=()=>showMerk();
+  $('#rst').onclick=()=>showModal('Arbeitsmappe zurücksetzen?','Alle Eingaben in diesem Modul werden gelöscht. Gelöste Aufgaben bleiben gelöst.',[{t:'Abbrechen'},{t:'Zurücksetzen',p:1,f:()=>{APP.wb=newWB(APP.mod);APP.undo=[];saveWB();renderTabs();openTask(APP.taskIdx);}}]);
+}
 
 renderHome();
 </script>
