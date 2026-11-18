@@ -5,94 +5,92 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Informatik · Klasse 9</title>
 <style>
-:root{--ink:#132019;--mu:#5f6f67;--line:#e3e9e5;--g:#15803d;--g2:#0f5132;--card:#fff}
-*{box-sizing:border-box}
-html,body{margin:0}
-body{font:16px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--ink);background:#f4f7f5;min-height:100vh}
+:root{--ink:#111816;--mu:#6b7570;--line:#e7ebe9;--bg:#fafbfa;--g:#16a34a;--gd:#15803d;--gl:#ecfdf3;--o:#ea580c;--ol:#fff4ec}
+*{box-sizing:border-box}html,body{margin:0}
+body{font:15.5px/1.55 "Segoe UI",system-ui,-apple-system,"Helvetica Neue",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
-.hero{position:relative;overflow:hidden;background:linear-gradient(125deg,#0c3a24 0%,#15803d 55%,#22a565 100%);color:#fff;padding:38px 22px 96px}
-.hero:before,.hero:after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.07)}
-.hero:before{width:420px;height:420px;right:-120px;top:-200px}.hero:after{width:260px;height:260px;left:-80px;bottom:-150px}
-.hin{max-width:1060px;margin:0 auto;position:relative;z-index:1}
-.crumb{font-size:13px;opacity:.8;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
-.hero h1{margin:6px 0 4px;font-size:40px;letter-spacing:-1px;line-height:1.1}
-.hero p{margin:0;opacity:.88;font-size:17px;max-width:620px}
-.grid-deco{position:absolute;right:24px;top:30px;display:grid;grid-template-columns:repeat(5,34px);gap:4px;opacity:.22;z-index:0}
-.grid-deco i{height:22px;border:1.5px solid #fff;border-radius:3px}
-.switch{display:inline-flex;background:rgba(255,255,255,.14);border-radius:14px;padding:4px;margin-top:22px;backdrop-filter:blur(4px)}
-.switch button{border:0;background:none;color:#fff;font:inherit;font-weight:600;font-size:15px;padding:9px 18px;border-radius:11px;cursor:pointer;opacity:.85}
-.switch button.on{background:#fff;color:var(--g2);opacity:1;box-shadow:0 4px 14px rgba(0,0,0,.15)}
-main{max-width:1060px;margin:-62px auto 0;padding:0 16px 70px;position:relative;z-index:2}
-.sec{margin-bottom:34px}
-.sh{display:flex;align-items:baseline;gap:12px;margin:0 4px 12px}
-.sh h2{margin:0;font-size:20px;letter-spacing:-.3px}
-.sh span{color:var(--mu);font-size:14px}
-.first .sh h2,.first .sh span{color:#fff}
-.first .sh span{opacity:.85}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s;position:relative}
-.card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(15,61,38,.12)}
-.ic{width:52px;height:52px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:26px}
-.card h3{margin:2px 0 0;font-size:19px;letter-spacing:-.2px}
-.card p{margin:0;color:var(--mu);font-size:14.5px;flex:1}
-.tags{display:flex;gap:6px;flex-wrap:wrap}
-.tags span{font-size:12px;background:#f1f5f2;color:#3d4d44;border-radius:20px;padding:2px 10px;font-weight:600}
-.go{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--g);font-size:15px;margin-top:4px}
-.card.big{grid-column:span 2;flex-direction:row;align-items:center;gap:22px;padding:26px}
-.card.big .ic{width:72px;height:72px;font-size:36px;border-radius:20px;flex:none}
-.card.big .bt{flex:1;display:flex;flex-direction:column;gap:8px}
-@media(max-width:680px){.card.big{grid-column:auto;flex-direction:column;align-items:flex-start}.hero h1{font-size:32px}.grid-deco{display:none}}
-.badge{position:absolute;top:16px;right:16px;font-size:11.5px;font-weight:700;border-radius:20px;padding:3px 10px}
-.probe .ic{background:#fff4e0}
-.probe .go{color:#b45309}
-.note{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;color:var(--mu);font-size:14px;display:flex;gap:12px;align-items:flex-start}
-.note b{color:var(--ink)}
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.steps div{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
-.steps .n{display:inline-flex;width:30px;height:30px;border-radius:50%;background:var(--g);color:#fff;align-items:center;justify-content:center;font-size:14px}
-.steps p{margin:10px 0 0;font-size:14px;color:#3d4d44}
-@media(max-width:820px){.steps{grid-template-columns:1fr 1fr}}
+.top{position:sticky;top:0;z-index:5;background:rgba(250,251,250,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.brand{font-weight:700;font-size:15px;white-space:nowrap}.brand span{color:var(--mu);font-weight:500}
+.seg{margin-left:auto;display:flex;background:#eef1ef;border-radius:10px;padding:3px}
+.seg button{border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--mu);padding:6px 14px;border-radius:8px;cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+main{flex:1;width:100%;max-width:960px;margin:0 auto;padding:44px 20px 40px}
+.intro{margin-bottom:28px}
+.kick{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--gd);background:var(--gl);border-radius:20px;padding:4px 11px}
+h1{font-size:34px;line-height:1.15;letter-spacing:-.8px;margin:12px 0 6px}
+.intro p{margin:0;color:var(--mu);font-size:16.5px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}h1{font-size:28px}main{padding-top:30px}}
+.tile{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;transition:border-color .15s,box-shadow .15s,transform .15s}
+.tile:hover{border-color:#cfd8d3;box-shadow:0 10px 30px rgba(17,24,22,.07);transform:translateY(-2px)}
+.th{display:flex;align-items:center;gap:12px}
+.ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+.tile h2{margin:0;font-size:19px;letter-spacing:-.2px;line-height:1.25}
+.tile p{margin:0;color:var(--mu);font-size:14.5px}
+.facts{display:flex;flex-wrap:wrap;gap:6px}
+.facts span{font-size:12.5px;font-weight:600;color:#3f4a45;background:#f3f5f4;border-radius:7px;padding:3px 9px}
+.cta{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--line);font-weight:700;font-size:14.5px}
+.cta i{font-style:normal;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.tile:hover .cta i{transform:translateX(3px)}
+.t-g .ico{background:var(--gl)}.t-g .cta{color:var(--gd)}.t-g .cta i{background:var(--gd);color:#fff}
+.t-o .ico{background:var(--ol)}.t-o .cta{color:var(--o)}.t-o .cta i{background:var(--o);color:#fff}
+.hint{display:flex;gap:10px;align-items:flex-start;margin-top:18px;color:var(--mu);font-size:13.5px;padding:0 4px}
+.hint b{color:var(--ink);font-weight:600}
+.flow{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-top:16px}
+.flow h3{margin:0 0 14px;font-size:15px}
+.fl{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;counter-reset:s}
+.fl div{font-size:13.5px;color:#3f4a45;position:relative;padding-top:34px}
+.fl div:before{counter-increment:s;content:counter(s);position:absolute;top:0;left:0;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+@media(max-width:720px){.fl{grid-template-columns:1fr 1fr}}
 .hidden{display:none}
-footer{text-align:center;color:#8a978f;font-size:13px;padding:10px 0 30px}
+footer{text-align:center;color:#9aa49f;font-size:12.5px;padding:18px 0 26px}
+.lo{font-size:13px;color:var(--mu);text-decoration:underline;cursor:pointer;margin-left:8px}
 </style>
 </head>
 <body>
-<header class="hero"><div class="grid-deco">
-<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
- <div class="hin"><div class="crumb">Klasse 9 · Informatik</div><h1>Tabellenkalkulation mit Excel</h1>
- <p>Von der ersten Formel bis zur WENN-Funktion.</p>
- <div class="switch"><button data-v="schueler" class="on">🎒 Schülerbereich</button><button data-v="lehrer">🧑‍🏫 Lehrerbereich</button></div></div></header>
-
+<header class="top"><div class="in"><div class="logo">9</div><div class="brand">Informatik <span>· Klasse 9</span></div>
+ <nav class="seg"><button data-v="schueler" class="on">Schüler</button><button data-v="lehrer">Lehrkraft</button></nav></div></header>
 <main>
- <!-- SCHÜLERBEREICH -->
+ <div class="intro"><span class="kick">▦ Tabellenkalkulation</span><h1>Excel lernen – Schritt für Schritt</h1><p>Von der ersten Formel bis zur WENN-Funktion.</p></div>
+
  <div id="schueler">
-  <section class="sec first"><div class="sh"><h2>Üben</h2><span>so oft du willst</span></div>
-   <div class="cards">
-    <a class="card big" href="excel-trainer.html"><div class="ic" style="background:#e7f6ec">📗</div><div class="bt"><h3>Excel-Trainer</h3><p>5 Module mit Tipps, Merkblatt und Schnelltests.</p><span class="go">Los geht’s →</span></div></a>
-   </div></section>
-
-  <section class="sec"><div class="sh"><h2>Proben</h2><span>nur öffnen, wenn deine Lehrkraft es sagt</span></div>
-   <div class="cards">
-    <a class="card probe" href="testprobe.html"><span class="badge" style="background:#e7f6ec;color:#15803d">10 Punkte</span><div class="ic">📝</div><h3>Testprobe</h3><p>Bücherflohmarkt · 6 Aufgaben</p><span class="go">Probe starten →</span></a>
-   </div></section>
-
-  <div class="note">💾<div><b>Deine Daten bleiben bei dir.</b> Alles, was du eintippst, wird nur in deinem Browser gespeichert. Bei einer Probe gibst du am Ende eine Datei ab – nichts wird automatisch verschickt.</div></div>
+  <div class="grid">
+   <a class="tile t-g" href="excel-trainer.html">
+    <div class="th"><div class="ico">📗</div><div><div class="lbl">Üben</div><h2>Excel-Trainer</h2></div></div>
+    <p>Übe in deinem Tempo – mit Tipps, Merkblatt und Schnelltests.</p>
+    <div class="facts"><span>5 Module</span><span>Abschlusstest</span></div>
+    <div class="cta">Trainer öffnen<i>→</i></div></a>
+   <a class="tile t-o" href="testprobe.html">
+    <div class="th"><div class="ico">📝</div><div><div class="lbl">Probe</div><h2>Testprobe</h2></div></div>
+    <p>Nur öffnen, wenn deine Lehrkraft es sagt.</p>
+    <div class="facts"><span>6 Aufgaben</span><span>10 Punkte</span></div>
+    <div class="cta">Probe starten<i>→</i></div></a>
+  </div>
+  <div class="hint">🔒<div><b>Deine Daten bleiben bei dir.</b> Alles wird nur in deinem Browser gespeichert.</div></div>
  </div>
 
- <!-- LEHRERBEREICH -->
  <div id="lehrer" class="hidden">
-  <section class="sec first"><div class="sh"><h2>Werkzeuge</h2><span>für die Lehrkraft · <a href="#" id="lkout" style="color:#fff;text-decoration:underline">🔒 abmelden</a></span></div>
-   <div class="cards">
-    <a class="card big" href="lehrertool.html"><div class="ic" style="background:#e7f6ec">✅</div><div class="bt"><h3>Proben korrigieren</h3><p>Abgabe-Dateien hineinziehen – die Korrektur passiert automatisch. Mit Notenspiegel, Aufgabenanalyse und CSV-Export.</p><div class="tags"><span>automatische Korrektur</span><span>Notenschlüssel einstellbar</span><span>CSV</span></div><span class="go">Lehrertool öffnen →</span></div></a>
-   </div></section>
-  <section class="sec"><div class="sh"><h2>So läuft eine Probe</h2></div>
-   <div class="steps">
-    <div><span class="n">1</span><p>Schüler/-innen öffnen die Probe über diese Seite und tragen ihren Namen ein.</p></div>
-    <div><span class="n">2</span><p>Nach <b>Abgeben</b> speichern sie ihre Datei und laden sie über den Upload-Knopf in deinen OneDrive-Ordner.</p></div>
-    <div><span class="n">3</span><p>Du lädst den Ordner aus OneDrive herunter und ziehst alle Dateien ins Lehrertool.</p></div>
-    <div><span class="n">4</span><p>Noten, Notenspiegel und Fehleranalyse sind sofort da. Danach den Upload-Link in OneDrive beenden.</p></div>
-   </div></section>
-  <div class="note">🔒<div><b>Datenschutz:</b> Die Seiten laden nichts von fremden Servern nach. Namen und Ergebnisse werden nur im Browser verarbeitet und nie an diese Website geschickt. Abgabe-Dateien bitte nicht in das GitHub-Repository legen.</div></div>
+  <div class="grid">
+   <a class="tile t-g" href="lehrertool.html">
+    <div class="th"><div class="ico">✅</div><div><div class="lbl">Korrigieren</div><h2>Lehrertool</h2></div></div>
+    <p>Abgabe-Dateien hineinziehen – Korrektur, Noten und PDF-Bericht entstehen automatisch.</p>
+    <div class="facts"><span>Notenspiegel</span><span>Aufgabenanalyse</span><span>PDF</span><span>CSV</span></div>
+    <div class="cta">Lehrertool öffnen<i>→</i></div></a>
+   <a class="tile t-o" href="testprobe.html">
+    <div class="th"><div class="ico">👀</div><div><div class="lbl">Ansehen</div><h2>Testprobe</h2></div></div>
+    <p>Probe so öffnen, wie die Schüler/-innen sie sehen.</p>
+    <div class="facts"><span>Bücherflohmarkt</span><span>10 Punkte</span></div>
+    <div class="cta">Probe ansehen<i>→</i></div></a>
+  </div>
+  <div class="flow"><h3>So läuft eine Probe</h3><div class="fl">
+   <div>Schüler/-innen öffnen die Probe und tragen ihren Namen ein.</div>
+   <div>Nach <b>Abgeben</b> Datei speichern und über den Upload-Knopf in OneDrive hochladen.</div>
+   <div>Du lädst den OneDrive-Ordner herunter und ziehst alle Dateien ins Lehrertool.</div>
+   <div>Noten und PDF sind sofort da. Danach den Upload-Link beenden.</div></div></div>
+  <div class="hint">🔒<div><b>Datenschutz:</b> Namen und Ergebnisse werden nur im Browser verarbeitet. Abgabe-Dateien nicht ins GitHub-Repository legen. <a class="lo" href="#" id="lkout">Abmelden</a></div></div>
  </div>
 </main>
 <footer>Informatik · Klasse 9</footer>
@@ -127,9 +125,9 @@ function lockAsk(onOk,onCancel){
 function lockOut(){try{sessionStorage.removeItem('inf9_lehrer');localStorage.removeItem('inf9_lehrer');}catch(e){}}
 
 function show(v){document.getElementById('schueler').classList.toggle('hidden',v!=='schueler');document.getElementById('lehrer').classList.toggle('hidden',v!=='lehrer');
-  document.querySelectorAll('.switch button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
 function go(v){const f=()=>{show(v);try{history.replaceState(null,'','#'+v);}catch(e){}};if(v==='lehrer')lockAsk(f,()=>show('schueler'));else f();}
-document.querySelectorAll('.switch button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>go(b.dataset.v));
 document.getElementById('lkout').onclick=e=>{e.preventDefault();lockOut();go('schueler');};
 if(location.hash==='#lehrer')go('lehrer');else show('schueler');
 </script>

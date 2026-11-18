@@ -1669,8 +1669,9 @@ function submitProbe(){
   const o={app:PROBE_APP,v:PROBE_VERSION,student:STUDENT,today:todaySerial(),submitted:new Date().toISOString(),checks:store.get('checks',[]),cells:clone(sh.cells)};
   o.sig=probeSig(o);store.set('submitted',o);renderDone(o);
 }
+function stampSaved(o){if(!o.saved){const {sig,...r}=o;r.saved=new Date().toISOString();r.sig=probeSig(r);Object.keys(o).forEach(k=>delete o[k]);Object.assign(o,r);store.set('submitted',o);}return o;}
 async function saveSubmission(o){
-  const data=JSON.stringify(o),fn=probeFile();
+  stampSaved(o);const data=JSON.stringify(o),fn=probeFile();
   if(DLNS){try{await DLNS.save({filename:fn,data});toast('💾 Gespeichert!');$('#dlok').style.display='block';return;}catch(e){if(e&&e.code==='declined'){toast('Speichern abgebrochen');return;}}}
   try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=fn;document.body.appendChild(a);a.click();a.remove();toast('💾 Datei wird gespeichert …');$('#dlok').style.display='block';}
   catch(e){showModal('Speichern nicht möglich','Nutze stattdessen „Abgabe-Code kopieren“ und füge den Code dort ein, wo deine Lehrkraft es sagt.',[{t:'OK',p:1}]);}
@@ -1690,7 +1691,7 @@ function renderDone(o){
      <div class="sd" style="margin-top:8px">Erst wenn dort „Hochgeladen“ erscheint, ist deine Abgabe angekommen.</div></div></div>
    <p style="color:#888;font-size:12px;margin-top:22px">Die Probe ist abgegeben und kann nicht mehr bearbeitet werden. <a id="newp" style="color:#888;text-decoration:underline;cursor:pointer">Neue Probe beginnen (nur nach Absprache mit der Lehrkraft)</a></p></div></div></div>`;
   $('#dl').onclick=()=>saveSubmission(o);
-  $('#cp').onclick=async()=>{const t=JSON.stringify(o);try{await navigator.clipboard.writeText(t);toast('📋 Code kopiert');}catch(e){showModal('Abgabe-Code','<textarea style="width:100%;height:200px">'+esc(t)+'</textarea><p>Markiere alles (Strg + A) und kopiere es (Strg + C).</p>',[{t:'OK',p:1}]);}};
+  $('#cp').onclick=async()=>{const t=JSON.stringify(stampSaved(o));try{await navigator.clipboard.writeText(t);toast('📋 Code kopiert');}catch(e){showModal('Abgabe-Code','<textarea style="width:100%;height:200px">'+esc(t)+'</textarea><p>Markiere alles (Strg + A) und kopiere es (Strg + C).</p>',[{t:'OK',p:1}]);}};
   $('#newp').onclick=()=>showModal('Neue Probe beginnen?','Deine bisherige Abgabe wird auf diesem Gerät gelöscht. Hast du deine Datei schon gespeichert und abgegeben?',[{t:'Abbrechen'},{t:'Ja, neu beginnen',p:1,f:()=>{store.del('submitted');store.del('wb_probe');store.del('checks');renderHome();}}]);
 }
 

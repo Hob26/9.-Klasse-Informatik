@@ -1265,8 +1265,8 @@ function render(){
     <div class="two"><section class="box"><h3>Notenspiegel</h3><div class="nsp">${sp.map((v,i)=>`<div><span class="v">${v}</span><i style="height:${v/mx*100}%;background:${NCOL[i+1]}"></i><span class="k">${i+1}</span></div>`).join('')}</div></section>
      <section class="box"><h3>Wie gut klappten die Aufgaben?</h3><div class="tasks">${P.items.map((it,i)=>{const L=plain(it.text);const lab=(L.split(':')[1]||L).trim();return `<div class="tr" title="${esc(L)}"><span class="tn">${i+1}</span><span class="tl">${esc(lab.length>46?lab.slice(0,45)+'…':lab)}</span><span class="tb"><i style="width:${st[i]}%;background:${st[i]>=70?'#15803d':st[i]>=40?'#d97706':'#dc2626'}"></i></span><span class="tp">${Math.round(st[i])}%</span></div>`;}).join('')}</div></section></div>
     <section class="box"><div class="rh"><h3>Ergebnisse</h3><div class="ctr"><input id="flt" placeholder="🔍 Name suchen" value="${esc(FILTER)}"><select id="srt"><option value="name">A–Z</option><option value="best">Beste zuerst</option><option value="worst">Schwächste zuerst</option></select><button id="csv">⬇ CSV</button><button id="cpy">📋 Kopieren</button><button id="clr" class="ghost">Leeren</button></div></div>
-     <table class="res"><thead><tr><th>Name</th><th>Klasse</th><th>Punkte</th><th style="width:30%">Ergebnis</th><th>Note</th><th></th></tr></thead><tbody>
-     ${sortRows(R).map(r=>{const o=r.s.o,nt=noteOf(r.g.pct);return `<tr data-k="${esc(r.s.key)}"><td><b>${esc(o.student.nach)}</b>, ${esc(o.student.vor)}</td><td>${esc(o.student.klasse||'–')}</td><td>${String(r.g.pts).replace('.',',')} / ${P.max}</td><td><div class="pb"><i style="width:${r.g.pct}%;background:${NCOL[nt]}"></i></div><small>${fmtP(r.g.pct)} %</small></td><td><span class="nb" style="background:${NCOL[nt]}">${nt}</span></td><td class="rt">${r.g.ok?'':'<span class="wb" title="Datei nach dem Abgeben verändert">⚠ verändert</span> '}<span class="lk">Details ›</span></td></tr>`;}).join('')}</tbody></table></section>`;
+     <table class="res"><thead><tr><th>Name</th><th>Klasse</th><th>Abgegeben</th><th>Punkte</th><th style="width:30%">Ergebnis</th><th>Note</th><th></th></tr></thead><tbody>
+     ${sortRows(R).map(r=>{const o=r.s.o,nt=noteOf(r.g.pct);return `<tr data-k="${esc(r.s.key)}"><td><b>${esc(o.student.nach)}</b>, ${esc(o.student.vor)}</td><td>${esc(o.student.klasse||'–')}</td><td class="mu" style="white-space:nowrap">${new Date(o.saved||o.submitted).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}</td><td>${String(r.g.pts).replace('.',',')} / ${P.max}</td><td><div class="pb"><i style="width:${r.g.pct}%;background:${NCOL[nt]}"></i></div><small>${fmtP(r.g.pct)} %</small></td><td><span class="nb" style="background:${NCOL[nt]}">${nt}</span></td><td class="rt">${r.g.ok?'':'<span class="wb" title="Datei nach dem Abgeben verändert">⚠ verändert</span> '}<span class="lk">Details ›</span></td></tr>`;}).join('')}</tbody></table></section>`;
   }
   $('#main').innerHTML=h;
   const drop=$('#drop');['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('on');}));['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('on');}));
@@ -1284,7 +1284,7 @@ function render(){
 function tableText(G,sep){const R=sortRows(G.R),P=G.P;
   const head=['Klasse','Nachname','Vorname','Abgegeben','Punkte','Max','Prozent','Note',...P.items.map((it,i)=>'A'+(i+1)+' ('+it.max+')'),'Hinweis'];
   const q=v=>sep===';'&&/[;"\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':v;
-  return [head.join(sep),...R.map(r=>{const o=r.s.o;return [o.student.klasse,o.student.nach,o.student.vor,new Date(o.submitted).toLocaleString('de-DE'),String(r.g.pts).replace('.',','),P.max,fmtP(r.g.pct),noteOf(r.g.pct),...r.g.items.map(x=>x.p),r.g.ok?'':'Datei verändert'].map(q).join(sep);})].join('\n');}
+  return [head.join(sep),...R.map(r=>{const o=r.s.o;return [o.student.klasse,o.student.nach,o.student.vor,new Date(o.saved||o.submitted).toLocaleString('de-DE'),String(r.g.pts).replace('.',','),P.max,fmtP(r.g.pct),noteOf(r.g.pct),...r.g.items.map(x=>x.p),r.g.ok?'':'Datei verändert'].map(q).join(sep);})].join('\n');}
 async function saveCSV(G){const data='﻿'+tableText(G,';');const fn='Ergebnisse_'+(G.P.short||'Probe').replace(/[^A-Za-z0-9ÄÖÜäöü]/g,'')+'.csv';
   if(DL){try{await DL.save({filename:fn,data});toast('💾 Gespeichert');return;}catch(e){if(e&&e.code==='declined')return;}}
   try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'text/csv'}));a.download=fn;document.body.appendChild(a);a.click();a.remove();toast('💾 Gespeichert');}catch(e){toast('Speichern nicht möglich – nutze „Kopieren“');}}
@@ -1292,7 +1292,7 @@ function detail(r){
   const o=r.s.o,nt=noteOf(r.g.pct),P=r.g.P;const topics={};r.g.items.forEach(i=>{topics[i.topic]=topics[i.topic]||{p:0,m:0};topics[i.topic].p+=i.p;topics[i.topic].m+=i.max;});
   modal(`<span class="nb" style="background:${NCOL[nt]};margin-right:10px">${nt}</span>${esc(o.student.vor)} ${esc(o.student.nach)}${o.student.klasse?' <span class="mu">· '+esc(o.student.klasse)+'</span>':''}`,
    `${r.g.ok?'':'<div class="fbw">⚠ Die Prüfsumme passt nicht – die Datei wurde nach dem Abgeben verändert. Bitte prüfen.</div>'}
-   <div class="dsum"><div><small>Punkte</small><b>${String(r.g.pts).replace('.',',')} / ${P.max}</b></div><div><small>Prozent</small><b>${fmtP(r.g.pct)} %</b></div><div><small>Abgegeben</small><b>${new Date(o.submitted).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}</b></div></div>
+   <div class="dsum"><div><small>Punkte</small><b>${String(r.g.pts).replace('.',',')} / ${P.max}</b></div><div><small>Prozent</small><b>${fmtP(r.g.pct)} %</b></div><div><small>Abgegeben</small><b>${new Date(o.saved||o.submitted).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'})}</b></div></div>
    <div class="tps">${Object.entries(topics).map(([k,v])=>`<span>${P.topics[k]} <b>${v.p}/${v.m}</b></span>`).join('')}</div>
    <div class="dl">${r.g.items.map(i=>`<div class="di ${i.p===i.max?'ok':i.p>0?'part':'no'}"><div class="dh"><span class="dn">${i.nr}</span><span class="dt">${i.text}</span><span class="dp">${i.p}/${i.max}</span></div><div class="da"><span>Eingabe:</span> <code>${esc(i.ans||'–')}</code></div><div class="dm">${i.msg}</div></div>`).join('')}</div>`,[{t:'Schließen',p:1}],'wide');
 }
@@ -1304,7 +1304,6 @@ function modal(title,html,btns,cls){const old=document.getElementById('mask');if
 let tt;function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',2200);}
 document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{if(!e.target.closest('#drop')){e.preventDefault();if(e.dataTransfer.files.length)readFiles([...e.dataTransfer.files]);}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const m=document.getElementById('mask');if(m)m.remove();}});
-
 
 /* ===== PDF-Bericht ===== */
 function pdfDec(s){const t=document.createElement('textarea');t.innerHTML=s;return t.value;}
@@ -1329,13 +1328,13 @@ function savePDF(G,each){
   const st=P.items.map((it,i)=>R.reduce((a,r)=>a+r.g.items[i].p,0)/(n*it.max)*100);
   let ty=y+5;P.items.forEach((it,i)=>{const L=pdfTxt(it.text);let lab=(L.split(':')[1]||L).trim();if(lab.length>48)lab=lab.slice(0,47)+'...';const x=M+70;doc.setFontSize(8.5);doc.setTextColor(0);doc.text((i+1)+'. '+lab,x,ty+3);doc.setFillColor(235,238,236);doc.rect(x+84,ty,30,3.6,'F');const c=st[i]>=70?[21,128,61]:st[i]>=40?[217,119,6]:[220,38,38];doc.setFillColor(...c);doc.rect(x+84,ty,30*st[i]/100,3.6,'F');doc.text(Math.round(st[i])+' %',x+116,ty+3);ty+=5.6;});
   y=Math.max(by+bh+18,ty+6);
-  doc.autoTable({startY:y,margin:{left:M,right:M},head:[['Name','Klasse','Punkte','Prozent','Note','Hinweis']],
-    body:R.map(r=>{const o=r.s.o;return [pdfTxt(o.student.nach+', '+o.student.vor),pdfTxt(o.student.klasse||'–'),de(r.g.pts)+' / '+P.max,fmtP(r.g.pct)+' %',String(noteOf(r.g.pct)),r.g.ok?'':'Datei verändert'];}),
-    styles:{fontSize:9.5,cellPadding:2.2},headStyles:{fillColor:GREEN},alternateRowStyles:{fillColor:[247,249,248]},columnStyles:{4:{halign:'center',fontStyle:'bold'},2:{halign:'right'},3:{halign:'right'}},
-    didParseCell:d=>{if(d.section==='body'&&d.column.index===4){const nt=+d.cell.raw;d.cell.styles.fillColor=hexRGB(NCOL[nt]);d.cell.styles.textColor=255;}if(d.section==='body'&&d.column.index===5&&d.cell.raw)d.cell.styles.textColor=[180,35,24];}});
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[['Name','Klasse','Abgegeben','Punkte','Prozent','Note','Hinweis']],
+    body:R.map(r=>{const o=r.s.o;return [pdfTxt(o.student.nach+', '+o.student.vor),pdfTxt(o.student.klasse||'–'),new Date(o.saved||o.submitted).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}),de(r.g.pts)+' / '+P.max,fmtP(r.g.pct)+' %',String(noteOf(r.g.pct)),r.g.ok?'':'Datei verändert'];}),
+    styles:{fontSize:9.5,cellPadding:2.2},headStyles:{fillColor:GREEN},alternateRowStyles:{fillColor:[247,249,248]},columnStyles:{5:{halign:'center',fontStyle:'bold'},3:{halign:'right'},4:{halign:'right'}},
+    didParseCell:d=>{if(d.section==='body'&&d.column.index===5){const nt=+d.cell.raw;d.cell.styles.fillColor=hexRGB(NCOL[nt]);d.cell.styles.textColor=255;}if(d.section==='body'&&d.column.index===6&&d.cell.raw)d.cell.styles.textColor=[180,35,24];}});
   // Einzelseiten
   if(each)R.forEach(r=>{doc.addPage();const o=r.s.o,nt=noteOf(r.g.pct);
-    head(o.student.vor+' '+o.student.nach+(o.student.klasse?' · '+o.student.klasse:''),P.title+' · abgegeben am '+new Date(o.submitted).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}));
+    head(o.student.vor+' '+o.student.nach+(o.student.klasse?' · '+o.student.klasse:''),P.title+' · abgegeben am '+new Date(o.saved||o.submitted).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}));
     doc.setFillColor(...hexRGB(NCOL[nt]));doc.roundedRect(W-M-22,4,22,16,2,2,'F');doc.setTextColor(255);doc.setFontSize(7);doc.text('Note',W-M-11,8.5,{align:'center'});doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text(String(nt),W-M-11,16.5,{align:'center'});doc.setFont('helvetica','normal');doc.setTextColor(0);
     let yy=32;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text(de(r.g.pts)+' von '+P.max+' Punkten  ·  '+fmtP(r.g.pct)+' %',M,yy);doc.setFont('helvetica','normal');
     if(!r.g.ok){yy+=6;doc.setTextColor(180,35,24);doc.setFontSize(9);doc.text('Achtung: Die Prüfsumme passt nicht – die Datei wurde nach dem Abgeben verändert.',M,yy);doc.setTextColor(0);}
