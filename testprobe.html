@@ -1802,6 +1802,198 @@ function renderTestPane(pane){
 const __ot=openTest;
 openTest=function(){PIDX=0;__ot();const k=itemCells(PROBE_ITEMS[0])[0];selectCell(k);updateCells();updateSel();};
 
+/* =====================================================================
+   REALISTISCHES MENÜBAND (abgespeckt, aber wie im echten Excel)
+   ===================================================================== */
+(function(){const st=document.createElement('style');st.textContent=`
+html body .xl .tb{background:#217346;color:#fff;height:38px;border-bottom:0;gap:10px}
+html body .xl .tb .ttl{font-weight:400;font-size:13px;color:#fff}
+html body .xl .tb .back{background:rgba(255,255,255,.16);color:#fff;display:inline-block}
+html body.clean .xl .tb .back{display:none}
+.tb .qa{display:flex;align-items:center;gap:10px;font-size:12px;opacity:.95;white-space:nowrap}
+.tb .tg{width:30px;height:15px;border:1.5px solid #fff;border-radius:8px;position:relative;display:inline-block;vertical-align:middle}
+.tb .tg:after{content:"";position:absolute;left:2px;top:2px;width:8px;height:8px;border-radius:50%;background:#fff}
+.tb .qa span.i{font-size:14px;cursor:default}
+.tb .srch{background:rgba(255,255,255,.18);border-radius:5px;padding:3px 12px;font-size:12px;min-width:200px;color:#e8f3ec}
+.rtabs{display:flex;gap:0;padding:0 6px;background:#f3f3f3;flex:none;user-select:none;border-bottom:1px solid #e1e1e1}
+.rtabs button{border:0;background:none;padding:7px 11px 6px;font-size:13px;cursor:pointer;color:#333;border-bottom:3px solid transparent;font-family:inherit}
+.rtabs button:hover{background:#e6e6e6}
+.rtabs button.on{color:#217346;border-bottom-color:#217346;font-weight:600;background:#fff}
+.rtabs button.file{color:#217346;font-weight:600}
+html body .xl .ribbon{height:96px!important;display:flex!important;align-items:stretch!important;padding:4px 4px 2px!important;background:#fff!important;border-bottom:1px solid #d4d4d4!important;overflow-x:auto;overflow-y:hidden;gap:0}
+.ribbon .g{display:flex;flex-direction:column;border-right:1px solid #e1e1e1;padding:0 6px;flex:none}
+.ribbon .g:last-child{border-right:0}
+.ribbon .gb{flex:1;display:flex;align-items:center;gap:2px}
+.ribbon .gl{font-size:11px;color:#666;text-align:center;padding-top:1px;white-space:nowrap}
+.ribbon .cl{display:flex;flex-direction:column;gap:1px;justify-content:center}
+.ribbon .rw{display:flex;gap:1px;align-items:center}
+.ribbon .rb{border:1px solid transparent;background:none;border-radius:3px;cursor:pointer;padding:1px 5px;font-size:12px;display:inline-flex;align-items:center;gap:4px;color:#222;min-height:23px;white-space:nowrap;font-family:inherit}
+.ribbon .rb:hover{background:#e6e6e6;border-color:#cfcfcf}
+.ribbon .rb.on{background:#c8dfd0;border-color:#8fbca0}
+.ribbon .rb.big{flex-direction:column;padding:2px 6px;height:68px;justify-content:center;gap:1px;line-height:1.1;text-align:center;white-space:normal;max-width:84px}
+.ribbon .rb.big .ic{font-size:22px;line-height:26px}
+.ribbon .rb .ic{font-size:13px}
+.ribbon .rb .ar{font-size:9px;color:#555}
+.ribbon .rb.na{color:#555}
+.ribbon .rb.na .ic{filter:grayscale(1);opacity:.75}
+.ribbon select{height:23px;font-size:12px;border:1px solid #c6c6c6;background:#fff;font-family:inherit}
+.ribbon .ck{font-size:12px;display:flex;align-items:center;gap:5px;padding:1px 4px;cursor:pointer;white-space:nowrap}
+.ribbon .sep{width:1px;height:18px;background:#ddd;margin:0 3px}
+.ribbon b.F{font-family:Georgia,serif;font-size:14px}.ribbon i.K{font-family:Georgia,serif;font-size:14px}.ribbon u.U{font-family:Georgia,serif;font-size:14px}
+.ribbon .back2{margin:12px}
+.dd .na{color:#999}.dd .na:hover{background:#f6f6f6}
+.dd .hd{font-size:11px;color:#777;padding:4px 14px 2px;cursor:default;font-weight:600}.dd .hd:hover{background:none}
+.dd hr{border:0;border-top:1px solid #e5e5e5;margin:3px 0}
+html body .xl .status{display:flex!important;height:24px;background:#f3f3f3;border-top:1px solid #e0e0e0}
+.status .vz{display:flex;align-items:center;gap:8px;color:#555}
+.status .vz .zl{display:inline-block;width:90px;height:2px;background:#999;position:relative}.status .vz .zl:after{content:"";position:absolute;left:44px;top:-5px;width:3px;height:12px;background:#555}
+html body .xl .sheettabs .nav,html body .xl .sheettabs .plus{display:flex!important}
+html body .xl .sheettabs{background:#f3f3f3}
+table.g.nogrid td{border-right-color:transparent;border-bottom-color:transparent}
+table.g td.fshow{text-align:left!important;color:#333;font-family:Consolas,monospace;font-size:12.5px}
+`;document.head.appendChild(st);})();
+APP.ribTab='start';APP.showF=false;
+const RIBTABS=[['datei','Datei'],['start','Start'],['einfuegen','Einfügen'],['layout','Seitenlayout'],['formeln','Formeln'],['daten','Daten'],['ueberpruefen','Überprüfen'],['ansicht','Ansicht']];
+function RB(ic,label,o={}){const at=o.dd&&!o.act?`data-dd="${o.dd}"`:o.act?`data-act="${o.act}"`:'data-act="na"';
+  return `<button class="rb${o.big?' big':''}${o.na?' na':''}" ${at} title="${esc(o.t||label.replace(/<[^>]+>/g,''))}"><span class="ic">${ic}</span>${label?`<span>${label}</span>`:''}${o.dd?'<span class="ar">▾</span>':''}</button>`;}
+function DD(ic,label,dd,o={}){return RB(ic,label,{...o,dd});}
+function G(label,inner){return `<div class="g"><div class="gb">${inner}</div><div class="gl">${label}</div></div>`;}
+const COL=x=>`<div class="cl">${x}</div>`,ROW=x=>`<div class="rw">${x}</div>`;
+function toolbarHTML(){
+  const c=activeCell()||{};
+  switch(APP.ribTab){
+  case 'datei':return APP.test?G('Datei',RB('💾','Speichern',{big:1,na:1})+RB('🖨️','Drucken',{big:1,na:1})+RB('📤','Exportieren',{big:1,na:1})):G('Datei',RB('←','Zurück zur Übersicht',{big:1,act:'home'})+RB('💾','Speichern',{big:1,na:1})+RB('🖨️','Drucken',{big:1,na:1}));
+  case 'start':return [
+    G('Zwischenablage',`<button class="rb big" data-act="paste" title="Einfügen (Strg+V)"><span class="ic">📋</span><span>Einfügen</span></button><button class="rb" data-dd="pastedd" style="align-self:flex-end;margin-bottom:6px;margin-left:-6px;padding:0 2px" title="Einfügeoptionen"><span class="ar">▾</span></button>`+COL(RB('✂️','Ausschneiden',{act:'cut'})+RB('⧉','Kopieren',{act:'copy'})+RB('🖌️','Format übertragen',{na:1}))),
+    G('Schriftart',COL(ROW(`<select id="ffont" title="Schriftart" style="width:118px">${['Calibri','Aptos Narrow','Arial','Times New Roman','Verdana','Comic Sans MS'].map(f=>`<option ${((c.ff||'Calibri')===f)?'selected':''}>${f}</option>`).join('')}</select><select id="fsize" title="Schriftgrad" style="width:48px">${[8,9,10,11,12,14,16,18,20,24].map(s=>`<option ${(c.sz?Math.round(c.sz/1.333):11)===s?'selected':''}>${s}</option>`).join('')}</select>`+RB('A<sup>▲</sup>','',{act:'szup',t:'Schriftgrad vergrößern'})+RB('A<sup>▼</sup>','',{act:'szdn',t:'Schriftgrad verkleinern'}))
+      +ROW(RB('<b class="F">F</b>','',{act:'b',t:'Fett'})+RB('<i class="K">K</i>','',{act:'i',t:'Kursiv'})+RB('<u class="U">U</u>','',{act:'u',t:'Unterstreichen'})+'<span class="sep"></span>'+DD('▦','','borderdd',{t:'Rahmenlinien'})+DD('🪣','','filldd',{t:'Füllfarbe'})+DD('<span style="text-decoration:underline;text-decoration-color:#c00000;text-decoration-thickness:3px;font-weight:700">A</span>','','fontcolordd',{t:'Schriftfarbe'})))),
+    G('Ausrichtung',COL(ROW(RB('⤒','',{na:1,t:'Oben ausrichten'})+RB('↕','',{na:1,t:'Zentriert ausrichten'})+RB('⤓','',{na:1,t:'Unten ausrichten'})+'<span class="sep"></span>'+RB('↵','Textumbruch',{na:1}))
+      +ROW(RB('⯇≡','',{act:'al-left',t:'Linksbündig'})+RB('≡','',{act:'al-center',t:'Zentriert'})+RB('≡⯈','',{act:'al-right',t:'Rechtsbündig'})+'<span class="sep"></span>'+DD('⊞','Verbinden und zentrieren','mergedd',{na:1})))),
+    G('Zahl',COL(ROW(`<select id="nfmt" title="Zahlenformat" style="width:140px">${[['general','Standard'],['number','Zahl'],['currency','Währung'],['acct','Buchhaltung'],['date','Datum, kurz'],['datelong','Datum, lang'],['time','Uhrzeit'],['percent','Prozent'],['frac','Bruch'],['sci','Wissenschaft'],['text','Text']].map(([v,l])=>`<option value="${v}" ${(c.fmt||'general')===v?'selected':''}>${l}</option>`).join('')}<option value="more">Weitere Zahlenformate…</option></select>`)
+      +ROW(DD('€','','eurdd',{t:'Buchhaltungszahlenformat'})+RB('%','',{act:'fmt-percent',t:'Prozentformat'})+RB('000','',{act:'fmt-number',t:'1.000er-Trennzeichen'})+RB('←,0','',{act:'fmt-number',t:'Dezimalstelle hinzufügen'})+RB(',00→','',{act:'fmt-general',t:'Dezimalstelle entfernen'})))),
+    G('Formatvorlagen',COL(DD('▤','Bedingte Formatierung','cfdd',{na:1})+DD('▦','Als Tabelle formatieren','tabdd',{na:1})+DD('▧','Zellenformatvorlagen','styledd',{na:1}))),
+    G('Zellen',COL(DD('⊕','Einfügen','insdd',{na:1})+DD('⊖','Löschen','deldd',{na:1})+DD('▥','Format','formatdd'))),
+    G('Bearbeiten',COL(`<div class="rw"><button class="rb" data-act="autosum" title="AutoSumme"><span class="ic" style="font-family:Georgia">Σ</span><span>AutoSumme</span></button><button class="rb" data-dd="autosumdd" style="padding:0 2px"><span class="ar">▾</span></button></div>`+DD('⬇','Ausfüllen','filldowndd')+DD('⌫','Löschen','cleardd'))+RB('⇅','Sortieren und Filtern',{big:1,dd:'sortdd',na:1})+RB('🔍','Suchen und Auswählen',{big:1,dd:'finddd',na:1}))
+  ].join('');
+  case 'formeln':return [
+    G('Funktionsbibliothek',RB('<i style="font-family:Georgia">fx</i>','Funktion einfügen',{big:1,act:'fxdlg'})+`<button class="rb big" data-dd="autosumdd"><span class="ic" style="font-family:Georgia">Σ</span><span>AutoSumme</span><span class="ar">▾</span></button>`
+      +RB('⭐','Zuletzt verwendet',{big:1,dd:'recentdd'})+RB('💶','Finanz&shy;mathematik',{big:1,dd:'na:Finanz'})+RB('❓','Logisch',{big:1,dd:'cat:Logik'})+RB('🔤','Text',{big:1,dd:'na:Text'})
+      +RB('📅','Datum und Uhrzeit',{big:1,dd:'cat:Datum & Uhrzeit'})+RB('🔎','Nachschlagen und Verweisen',{big:1,dd:'na:Verweis'})+RB('θ','Mathematik und Trigonometrie',{big:1,dd:'cat:Mathematik'})+RB('⋯','Mehr Funktionen',{big:1,dd:'cat:Statistik'})),
+    G('Definierte Namen',COL(RB('🏷️','Namens-Manager',{na:1})+RB('✎','Namen definieren',{na:1,dd:'na:x'}))),
+    G('Formelüberwachung',COL(RB('↖','Spur zum Vorgänger',{na:1})+RB('↘','Spur zum Nachfolger',{na:1})+`<button class="rb ${APP.showF?'on':''}" data-act="showf"><span class="ic">ƒ</span><span>Formeln anzeigen</span></button>`)),
+    G('Berechnung',RB('🧮','Berechnungs&shy;optionen',{big:1,dd:'calcdd',na:1}))
+  ].join('');
+  case 'einfuegen':return [G('Tabellen',RB('▦','PivotTable',{big:1,na:1})+RB('▤','Tabelle',{big:1,na:1})),G('Illustrationen',RB('🖼️','Bilder',{big:1,na:1})+RB('⬠','Formen',{big:1,na:1})+RB('😀','Pikto&shy;gramme',{big:1,na:1})),
+    G('Diagramme',RB('📊','Empfohlene Diagramme',{big:1,na:1})+COL(ROW(RB('▮▯','',{na:1,t:'Säulendiagramm'})+RB('📈','',{na:1,t:'Liniendiagramm'}))+ROW(RB('◔','',{na:1,t:'Kreisdiagramm'})+RB('▬','',{na:1,t:'Balkendiagramm'})))),G('Text',RB('🅰','Textfeld',{big:1,na:1})+RB('▭','Kopf- und Fußzeile',{big:1,na:1})),G('Symbole',RB('π','Formel',{big:1,na:1})+RB('Ω','Symbol',{big:1,na:1}))].join('');
+  case 'layout':return [G('Designs',RB('Aa','Designs',{big:1,na:1})),G('Seite einrichten',RB('▭','Seiten&shy;ränder',{big:1,na:1})+RB('⇆','Ausrichtung',{big:1,na:1})+RB('📄','Format',{big:1,na:1})+RB('▣','Druck&shy;bereich',{big:1,na:1})),
+    G('Blattoptionen',COL(`<span class="gl" style="text-align:left">Gitternetzlinien</span><label class="ck"><input type="checkbox" id="optgrid" ${$('#gt')&&$('#gt').classList.contains('nogrid')?'':'checked'}> Anzeigen</label><label class="ck"><input type="checkbox" disabled> Drucken</label>`))].join('');
+  case 'daten':return [G('Daten abrufen und transformieren',RB('🗄️','Daten abrufen',{big:1,na:1})+RB('📄','Aus Text/CSV',{big:1,na:1})),G('Abfragen und Verbindungen',RB('⟳','Alle aktualisieren',{big:1,na:1})),
+    G('Sortieren und Filtern',COL(RB('A↓Z','',{na:1,t:'Von A bis Z sortieren'})+RB('Z↓A','',{na:1,t:'Von Z bis A sortieren'}))+RB('⇅','Sortieren',{big:1,na:1})+RB('▽','Filtern',{big:1,na:1})),G('Datentools',RB('⫼','Text in Spalten',{big:1,na:1})+RB('☑','Daten&shy;überprüfung',{big:1,na:1}))].join('');
+  case 'ueberpruefen':return [G('Dokumentprüfung',RB('ABC✓','Recht&shy;schreibung',{big:1,na:1})+RB('📖','Thesaurus',{big:1,na:1})),G('Kommentare',RB('💬','Neuer Kommentar',{big:1,na:1})),G('Schützen',RB('🔒','Blatt schützen',{big:1,na:1})+RB('🔐','Arbeitsmappe schützen',{big:1,na:1}))].join('');
+  case 'ansicht':return [G('Arbeitsmappenansichten',RB('▦','Normal',{big:1,act:'na'})+RB('▤','Seitenumbruch&shy;vorschau',{big:1,na:1})+RB('📄','Seiten&shy;layout',{big:1,na:1})),
+    G('Anzeigen',COL(`<label class="ck"><input type="checkbox" id="optgrid" ${$('#gt')&&$('#gt').classList.contains('nogrid')?'':'checked'}> Gitternetzlinien</label><label class="ck"><input type="checkbox" id="optfbar" ${$('.fbar')&&$('.fbar').style.display==='none'?'':'checked'}> Bearbeitungsleiste</label><label class="ck"><input type="checkbox" checked disabled> Überschriften</label>`)),
+    G('Zoom',RB('🔍','Zoom',{big:1,na:1})+RB('100','100 %',{big:1,na:1})),G('Fenster',RB('❄','Fenster einfrieren',{big:1,dd:'na:x',na:1})+RB('⧉','Neues Fenster',{big:1,na:1}))].join('');
+  }
+  return '';
+}
+function renderRibbon(){
+  const rb=$('#ribbon');if(!rb)return;
+  if(!$('.rtabs')){const t=document.createElement('div');t.className='rtabs';rb.parentNode.insertBefore(t,rb);}
+  $('.rtabs').innerHTML=RIBTABS.map(([k,l])=>`<button data-rt="${k}" class="${k==='datei'?'file ':''}${k===APP.ribTab?'on':''}">${l}</button>`).join('');
+  document.querySelectorAll('.rtabs [data-rt]').forEach(b=>{b.addEventListener('mousedown',e=>e.preventDefault());b.onclick=()=>{APP.ribTab=b.dataset.rt;renderRibbon();};});
+  rb.innerHTML=toolbarHTML();
+  rb.querySelectorAll('[data-act],[data-dd]').forEach(b=>b.addEventListener('mousedown',e=>e.preventDefault()));
+  rb.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>ribAct(b.dataset.act));
+  rb.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>ribDD(b.dataset.dd,b));
+  const nf=$('#nfmt');if(nf)nf.onchange=()=>{commitIfEditing();const v=nf.value;if(['frac','sci','more'].includes(v)){toast('Dieses Format brauchst du hier nicht 🙂');updateRibbonState();return;}applyFmt({fmt:v==='acct'?'currency':v});};
+  const ff=$('#ffont');if(ff)ff.onchange=()=>{commitIfEditing();applyFmt({ff:ff.value==='Calibri'?null:ff.value});};
+  const fs=$('#fsize');if(fs)fs.onchange=()=>{commitIfEditing();const s=+fs.value;applyFmt({sz:s===11?null:Math.round(s*1.333)});};
+  rb.querySelectorAll('#optgrid').forEach(cb=>cb.onchange=()=>{$('#gt').classList.toggle('nogrid',!cb.checked);});
+  const ofb=$('#optfbar');if(ofb)ofb.onchange=()=>{$('.fbar').style.display=ofb.checked?'':'none';updateSel();};
+  updateRibbonState();
+}
+function updateRibbonState(){
+  if(APP.view!=='xl')return;const c=activeCell()||{};
+  document.querySelectorAll('#ribbon [data-act]').forEach(b=>{const a=b.dataset.act;let on=false;if(a==='b'||a==='i'||a==='u')on=!!c[a];if(a.startsWith('al-'))on=c.al===a.slice(3);if(a==='showf')on=APP.showF;b.classList.toggle('on',on);});
+  const nf=$('#nfmt');if(nf)nf.value=c.fmt||'general';
+  const ff=$('#ffont');if(ff)ff.value=c.ff||'Calibri';
+  const fs=$('#fsize');if(fs){const s=c.sz?Math.round(c.sz/1.333):11;fs.value=[8,9,10,11,12,14,16,18,20,24].includes(s)?s:11;}
+}
+const __ribAct=ribAct;
+ribAct=function(a){
+  if(a==='na'){toast('Diese Funktion brauchst du in dieser Übung nicht 🙂');return;}
+  if(a==='cut'){if(APP.edit&&!commitEdit(0,0))return;copySel();if(APP.clip)APP.clip.cut=true;return;}
+  if(a==='szup'||a==='szdn'){if(APP.edit&&!commitEdit(0,0))return;const c=activeCell()||{};const cur=c.sz?Math.round(c.sz/1.333):11;const L=[8,9,10,11,12,14,16,18,20,24];let i=L.indexOf(cur);if(i<0)i=3;i=Math.max(0,Math.min(L.length-1,i+(a==='szup'?1:-1)));applyFmt({sz:L[i]===11?null:Math.round(L[i]*1.333)});return;}
+  if(a==='fmt-general'){if(APP.edit&&!commitEdit(0,0))return;applyFmt({fmt:'general'});return;}
+  if(a==='showf'){APP.showF=!APP.showF;updateCells();updateSel();renderRibbon();return;}
+  return __ribAct(a);
+};
+function ddItems(list,btn,onPick){const r=btn.getBoundingClientRect();
+  const h=list.map((it,i)=>it==='-'?'<hr>':it.h?`<div class="hd">${esc(it.h)}</div>`:`<div data-cm="${i}" class="${it.na?'na':''}" ${it.d?`title="${esc(it.d)}"`:''}>${it.t}</div>`).join('');
+  showDD(h,r.left,r.bottom,el=>{const it=list[+el.dataset.cm];if(!it)return;if(it.na){toast('Das brauchst du in dieser Übung nicht 🙂');return;}onPick(it);});}
+const NA_FN={Finanz:['BW','KAPZ','RMZ','ZINS','ZW','ZZR'],Text:['GLÄTTEN','GROSS','KLEIN','LÄNGE','LINKS','RECHTS','TEIL','TEXTKETTE','VERKETTEN','WECHSELN'],Verweis:['INDEX','SVERWEIS','VERGLEICH','WVERWEIS','XVERWEIS'],x:[]};
+function ribDD(kind,btn){
+  const r=btn.getBoundingClientRect();
+  if(kind==='filldd'||kind==='fontcolordd'){const cols=['#ffffff','#000000','#e7e6e6','#44546a','#4472c4','#ed7d31','#a5a5a5','#ffc000','#5b9bd5','#70ad47','#c00000','#ff0000','#ffff00','#92d050','#00b050','#00b0f0','#0070c0','#7030a0','#e2efda','#fce4d6','#ddebf7','#fff2cc','#ededed','#d9d9d9'];
+    showDD('<div class="hd">Designfarben</div><div class="pal">'+cols.map(c=>`<span style="background:${c}" data-col="${c}" title="${c}"></span>`).join('')+`</div><hr><div data-col="none">${kind==='filldd'?'Keine Füllung':'Automatisch'}</div><div data-cm="more" class="na">Weitere Farben…</div>`,r.left,r.bottom,el=>{
+      if(el.dataset.cm){toast('Das brauchst du in dieser Übung nicht 🙂');return;}commitIfEditing();const v=el.dataset.col==='none'?null:el.dataset.col;if(kind==='filldd'){if(v){FILLCOL=v;}applyFmt({fill:v});}else applyFmt({col:v});});return;}
+  if(kind==='borderdd'){ddItems([{h:'Rahmen'},{t:'▁ Rahmenlinie unten',na:1},{t:'▔ Rahmenlinie oben',na:1},{t:'▏ Rahmenlinie links',na:1},{t:'▕ Rahmenlinie rechts',na:1},'-',{t:'☐ Kein Rahmen',bd:null},{t:'▦ Alle Rahmenlinien',bd:1},{t:'▢ Rahmenlinien außen',na:1},{t:'▣ Dicke Rahmenlinie außen',na:1},'-',{t:'Weitere Rahmenlinien…',na:1}],btn,it=>{commitIfEditing();applyFmt({bd:it.bd});});return;}
+  if(kind.startsWith('cat:')){const cat=kind.slice(4);ddItems(FNAMES.filter(n=>FN[n].cat===cat).map(n=>({t:n,fn:n,d:FN[n].d})).concat(['-',{t:'<i>fx</i> Funktion einfügen…',fx:1}]),btn,it=>{if(it.fx)fxDialog();else insertFunction(it.fn);});return;}
+  if(kind.startsWith('na:')){const L=NA_FN[kind.slice(3)]||[];ddItems(L.length?L.map(n=>({t:n,na:1})):[{t:'(in dieser Übung nicht benötigt)',na:1}],btn,()=>{});return;}
+  if(kind==='recentdd'){ddItems(['SUMME','MITTELWERT','WENN','ANZAHL','ANZAHL2','HEUTE','MAX','MIN'].map(n=>({t:n,fn:n,d:FN[n].d})).concat(['-',{t:'<i>fx</i> Funktion einfügen…',fx:1}]),btn,it=>{if(it.fx)fxDialog();else insertFunction(it.fn);});return;}
+  if(kind==='autosumdd'){ddItems([{t:'Σ Summe',fn:'SUMME'},{t:'Mittelwert',fn:'MITTELWERT'},{t:'Anzahl',fn:'ANZAHL'},{t:'Max',fn:'MAX'},{t:'Min',fn:'MIN'},'-',{t:'Weitere Funktionen…',fx:1}],btn,it=>{if(it.fx)fxDialog();else autoFn(it.fn);});return;}
+  if(kind==='pastedd'){ddItems([{h:'Einfügen'},{t:'📋 Einfügen',a:'p'},{t:'ƒ Formeln',a:'p'},{h:'Werte einfügen'},{t:'123 Werte',a:'v'},{h:'Weitere Einfügeoptionen'},{t:'🖌 Formatierung',na:1},{t:'🔗 Verknüpfung einfügen',na:1},'-',{t:'Inhalte einfügen…',na:1}],btn,it=>{commitIfEditing();if(it.a==='v')pasteValues();else paste();});return;}
+  if(kind==='eurdd'){ddItems([{t:'€ Deutsch (Deutschland)',a:1},{t:'£ Englisch (Großbritannien)',na:1},{t:'$ Englisch (USA)',na:1},{t:'CHF Deutsch (Schweiz)',na:1},'-',{t:'Weitere Buchhaltungsformate…',na:1}],btn,()=>{commitIfEditing();applyFmt({fmt:'currency'});});return;}
+  if(kind==='formatdd'){ddItems([{h:'Zellengröße'},{t:'Zeilenhöhe…',na:1},{t:'Zeilenhöhe automatisch anpassen',na:1},{t:'Spaltenbreite…',na:1},{t:'Spaltenbreite automatisch anpassen',a:'fit'},{t:'Standardbreite…',na:1},{h:'Blätter organisieren'},{t:'Blatt umbenennen',a:'ren'},{t:'Blatt verschieben/kopieren…',na:1},{t:'Registerfarbe',na:1},'-',{t:'Zellen formatieren…',na:1}],btn,it=>{commitIfEditing();if(it.a==='fit'){const s=normSel();for(let c=s.c1;c<=s.c2;c++)autoFit(c);}else{const el=$('.sheettabs .tab.on');if(el)renameSheet(APP.wb.active,el);}});return;}
+  if(kind==='filldowndd'){ddItems([{t:'⬇ Unten',a:'d'},{t:'➡ Rechts',a:'r'},{t:'⬆ Oben',na:1},{t:'⬅ Links',na:1},'-',{t:'Reihe…',na:1},{t:'Blitzvorschau',na:1}],btn,it=>{commitIfEditing();fillDir(it.a);});return;}
+  if(kind==='cleardd'){ddItems([{t:'⌫ Alle löschen',a:'all'},{t:'Formate löschen',a:'fmt'},{t:'Inhalte löschen',a:'cont'},{t:'Kommentare löschen',na:1},{t:'Links löschen',na:1}],btn,it=>{commitIfEditing();if(it.a==='cont')clearSel();else clearFmt(it.a==='all');});return;}
+  const NA={mergedd:['Verbinden und zentrieren','Verbinden über','Zellen verbinden','Zellverbund aufheben'],cfdd:['Regeln zum Hervorheben von Zellen','Obere/untere Regeln','Datenbalken','Farbskalen','Symbolsätze','-','Neue Regel…','Regeln löschen'],tabdd:['Hell','Mittel','Dunkel','-','Neue Tabellenformatvorlage…'],styledd:['Gut, Schlecht und Neutral','Daten und Modell','Überschriften','Zahlenformat','-','Neue Zellenformatvorlage…'],insdd:['Zellen einfügen…','Blattzeilen einfügen','Blattspalten einfügen','Blatt einfügen'],deldd:['Zellen löschen…','Blattzeilen löschen','Blattspalten löschen','Blatt löschen'],sortdd:['Von A bis Z sortieren','Von Z bis A sortieren','Benutzerdefiniertes Sortieren…','-','Filtern','Löschen','Erneut anwenden'],finddd:['Suchen…','Ersetzen…','Gehe zu…','-','Formeln','Kommentare','Konstanten'],calcdd:['Automatisch','Automatisch außer bei Datentabellen','Manuell']};
+  ddItems((NA[kind]||['(nicht benötigt)']).map(t=>t==='-'?'-':{t,na:1}),btn,()=>{});
+}
+function autoFn(name){
+  if(APP.edit)return;const X=APP.vals,{r,c}=APP.sel;let rg='';
+  let r2=r-1;while(r2>=0&&typeof X.val(A(c,r2))==='number')r2--;
+  if(r2<r-1)rg=A(c,r2+1)+':'+A(c,r-1);else{let c2=c-1;while(c2>=0&&typeof X.val(A(c2,r))==='number')c2--;if(c2<c-1)rg=A(c2+1,r)+':'+A(c-1,r);}
+  const pre='='+name+'(';startEdit('enter',pre+rg+')');const el=APP.edit.el;el.setSelectionRange(pre.length,pre.length+rg.length);if(rg){const p=parseA(rg.split(':')[0]);APP.edit.point={start:pre.length,end:pre.length+rg.length,anchor:p,cur:p};}updateEditUI();
+}
+function fillDir(d){const s=normSel();if(d==='d'&&s.r2===s.r1||d==='r'&&s.c2===s.c1){toast('Markiere zuerst den Bereich, der gefüllt werden soll – inklusive der ersten Zelle.');return;}
+  pushUndo();const sh=curSheet();
+  if(d==='d'){for(let c=s.c1;c<=s.c2;c++){const src=sh.cells[A(c,s.r1)];for(let r=s.r1+1;r<=s.r2;r++){const k=A(c,r);if(!src){delete sh.cells[k];continue;}const o=clone(src);if(o.f!=null)o.f=shiftFormula(o.f,r-s.r1,0);o.src='fill';sh.cells[k]=o;}}}
+  else{for(let r=s.r1;r<=s.r2;r++){const src=sh.cells[A(s.c1,r)];for(let c=s.c1+1;c<=s.c2;c++){const k=A(c,r);if(!src){delete sh.cells[k];continue;}const o=clone(src);if(o.f!=null)o.f=shiftFormula(o.f,0,c-s.c1);o.src='fill';sh.cells[k]=o;}}}
+  afterChange();}
+function clearFmt(all){pushUndo();const sh=curSheet(),s=normSel();for(let r=s.r1;r<=s.r2;r++)for(let c=s.c1;c<=s.c2;c++){const k=A(c,r),cell=sh.cells[k];if(!cell)continue;if(all){delete sh.cells[k];continue;}for(const p of ['fmt','b','i','u','fill','al','bd','sz','col','ff'])delete cell[p];if(!Object.keys(cell).length)delete sh.cells[k];}afterChange();}
+function pasteValues(){const cl=APP.clip;if(!cl)return;const src=APP.wb.sheets[cl.si],X=mkCtx(src);pushUndo();const sh=curSheet(),r0=Math.min(APP.sel.r,APP.sel.r2),c0=Math.min(APP.sel.c,APP.sel.c2);
+  cl.cells.forEach((row,i)=>row.forEach((s,j)=>{const r=r0+i,c=c0+j;if(r>=sh.nRows||c>=sh.nCols)return;const k=A(c,r);if(!s){delete sh.cells[k];return;}const o=clone(s);if(o.f!=null){const v=X.val(A(cl.c1+j,cl.r1+i));delete o.f;delete o._ast;o.v=isErr(v)?v.e:v;}o.src='paste';sh.cells[k]=o;}));afterChange();}
+const __paste=paste;
+paste=function(){const cl=APP.clip;__paste();if(cl&&cl.cut){const sh=APP.wb.sheets[cl.si],s=normSel();for(let r=cl.r1;r<=cl.r2;r++)for(let c=cl.c1;c<=cl.c2;c++){if(cl.si===APP.wb.active&&r>=s.r1&&r<=s.r2&&c>=s.c1&&c<=s.c2)continue;delete sh.cells[A(c,r)];}APP.clip=null;afterChange();}};
+const __upc=updateCells;
+updateCells=function(){__upc();if(!APP.tds||!APP.tds.length)return;const sh=curSheet();for(const [k,cell] of Object.entries(sh.cells)){const p=parseA(k);if(!p||p.r>=sh.nRows||p.c>=sh.nCols)continue;const td=APP.tds[p.r][p.c];if(!td)continue;if(cell.ff)td.style.fontFamily='"'+cell.ff+'",sans-serif';if(APP.showF&&cell.f!=null){td.textContent=cell.f;td._k=null;td.classList.add('fshow','clip');}}};
+const __bxr=buildXL;
+buildXL=function(){__bxr();
+  const tb=$('.tb');if(tb&&!tb.querySelector('.qa')){const back=tb.querySelector('.back');const qa=document.createElement('span');qa.className='qa';qa.innerHTML='AutoSpeichern <span class="tg"></span> <span class="i" title="Speichern">💾</span><span class="i" title="Rückgängig">↶</span><span class="i" title="Wiederholen">↷</span>';if(back)back.after(qa);else tb.prepend(qa);
+    const s=document.createElement('span');s.className='srch';s.textContent='🔍 Suchen (Alt+M)';tb.appendChild(s);}
+  const t=$('.tb .ttl');if(t&&APP.mod&&APP.mod.file)t.textContent=APP.mod.file+' – Excel';
+  const st=$('.status');if(st&&!st.querySelector('.vz')){const v=document.createElement('span');v.className='vz';v.innerHTML='<span title="Normal">▦</span><span title="Seitenlayout">▣</span><span title="Seitenumbruchvorschau">▤</span> &nbsp;– <span class="zl"></span> + &nbsp;100 %';st.appendChild(v);}
+};
+document.addEventListener('keydown',e=>{if(APP.view!=='xl'||APP.edit||APP.modal)return;const t=e.target;if(t&&/INPUT|SELECT|TEXTAREA/.test(t.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='x'){e.preventDefault();e.stopImmediatePropagation();copySel();if(APP.clip)APP.clip.cut=true;}},true);
+/* ===== Zurück zur Startseite (Probe) ===== */
+var SITE_HOME='index.html';
+(function(){const st=document.createElement('style');st.textContent=`
+.tb .hb{background:rgba(255,255,255,.16);color:#fff;border:0;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:13px;font-family:inherit;white-space:nowrap}
+.tb .hb:hover{background:rgba(255,255,255,.3)}
+.hlink{display:inline-block;color:#217346;font-size:13px;text-decoration:none;margin-bottom:4px;cursor:pointer;font-weight:600}
+.hlink:hover{text-decoration:underline}
+.homebig{display:inline-block;margin-top:18px;background:#fff;color:#217346;border:1.5px solid #217346!important;text-decoration:none;font-size:16px;font-weight:700;padding:11px 22px;border-radius:10px;cursor:pointer;border:0;font-family:inherit}
+.homebig:hover{background:#eef6f1}`;document.head.appendChild(st);})();
+function goHome(){if(APP.view==='xl'){commitIfEditing();saveWB();}if(SITE_HOME)location.href=SITE_HOME;else renderHome();}
+const __bxN=buildXL;
+buildXL=function(){__bxN();const tb=$('.tb');if(tb&&!tb.querySelector('.hb')){const b=document.createElement('button');b.className='hb';b.textContent=SITE_HOME?'⌂ Startseite':'← Start';
+  b.onclick=()=>showModal('Probe verlassen?','Deine Eingaben bleiben gespeichert. Du kannst später auf diesem Gerät weiterarbeiten.',[{t:'Abbrechen'},{t:SITE_HOME?'Zur Startseite':'Zum Start',p:1,f:goHome}]);tb.prepend(b);}};
+const __rhN=renderHome;
+renderHome=function(){__rhN();if(!SITE_HOME)return;const h=$('#app .hhead h1');if(h&&!$('#app .hlink')){const a=document.createElement('a');a.className='hlink';a.href=SITE_HOME;a.textContent='← Informatik · Klasse 9';h.before(a);}};
+const __rdN=renderDone;
+renderDone=function(o){__rdN(o);if(!SITE_HOME)return;const np=$('#newp');const p=np?np.closest('p'):null;if(p&&!$('#app .homebig')){const a=document.createElement('a');a.className='homebig';a.href=SITE_HOME;a.textContent='⌂ Zurück zur Startseite';p.before(a);}};
+
 renderHome();
 </script>
 </body>
